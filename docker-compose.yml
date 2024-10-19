@@ -1,0 +1,36 @@
+version: '3.9'  # Make sure to include this line
+
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: rule_user
+      POSTGRES_PASSWORD: yourpassword
+      POSTGRES_DB: rule_engine
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  web:
+    build: .
+    command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://rule_user:yourpassword@db:5432/rule_engine
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
